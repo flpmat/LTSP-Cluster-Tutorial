@@ -35,6 +35,6 @@ sudo apt-get dist-upgrade
 ### Install LTSP-Server and isc-dhcp-server
 
 ```
-sudo apt-get install ltsp-server dhcp3-server
+sudo apt-get install ltsp-server isc-dhcp-server
 ```
 
