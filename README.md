@@ -84,14 +84,8 @@ Finally, you have to make sure that the file `/etc/default/isc-dhcp-serve` has t
 INTERFACES="eth1"
 ```
 
+Restart isc-dhcp-server:
+```
+sudo /etc/init.d/isc-dhcp-server restart
+```
 
-
-
-This will install the ltsp server that will be used to serve the image to all clients and the DHCP server that has changed name, package name and executable name without being documented ANYWHERE. If you are going to do something do it well or don't do it at all, thats what I always say but lets continue.
-
-Now we need to edit the configuration file for the DHCP server so lets open that file
-?
-1
-sudo pico /etc/dhcp/dhcpd.conf
-
-The idea here is that since you are looking to create a cluster with a lot of thin clients, you will need to have a large pool of IP addresses. I am giving you an example here with a supernetted Class C network that gives us over 1000 usable IPs. A standard Class C or /24 subnet will work as well.
