@@ -24,3 +24,17 @@ Both servers must know each other. For this, you need to edit the `/etc/hosts`:
 ```
 
 ## Root Server
+
+Install a 64-bit Ubuntu server to install root server. Do not install anything extra – just SSH server. Make all updates and upgrades:
+
+```
+sudo apt-get update
+sudo apt-get dist-upgrade
+```
+
+### Install LTSP-Server and isc-dhcp-server
+
+```
+sudo apt-get install ltsp-server dhcp3-server
+```
+
