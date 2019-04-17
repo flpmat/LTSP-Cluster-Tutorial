@@ -22,3 +22,5 @@ Both servers must know each other. For this, you need to edit the `/etc/hosts`:
 192.168.1.102   ltsp-appserv01
 
 ```
+
+## Root Server
