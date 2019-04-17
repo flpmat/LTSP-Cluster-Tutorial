@@ -1,1 +1,1 @@
-# LTSP-Cluster-Tutorial-
+# LTSP-Cluster (Tutorial)
