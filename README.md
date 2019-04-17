@@ -16,8 +16,9 @@ The network layout built for this tutorial is presented on the following picture
 INSERIR IMAGEM DE CONFIGURAÇÃO DE REDE
 
 Both servers must know each other. For this, you need to edit the `/etc/hosts`: 
+```
+127.0.0.1       localhost
+192.168.1.101   ltsp-root01
+192.168.1.102   ltsp-appserv01
 
-  127.0.0.1       localhost
-  192.168.1.101   ltsp-root01
-  192.168.1.102   ltsp-appserv01
-  [--]
+```
