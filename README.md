@@ -228,8 +228,8 @@ Cleaned status table
 Cleaned log table
 Cleaned computershw table
 Regenerated tree
-Start Apache2 again.
 ```
+Start Apache2 again.
 ```
 /etc/init.d/apache2 start
 ```
