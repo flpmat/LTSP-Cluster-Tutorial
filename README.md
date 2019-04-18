@@ -11,11 +11,19 @@ Some of the LTSP-Cluster Features are:
 
 In this tutorial, a basic setup of LTSP-Cluster will be installed. For this purpose, we will use VirtualBox where two x86_64/amd64 Ubuntu servers are configured: the first one will be the root server and the second one  the application server. The LTSP-Cluster architecture is presented on the image below and comprises of a root server with a chroot, a load-balancer and a cluster control center; the application server has a LTSBAgent and an account manager running.
 
-The network layout built for this tutorial is presented on the following picture. Upfront to this tutorial, the VirtualBox must be configured so as both virtual machines have one network interface connected to NAT and one network inteface bridged.
+The network layout built for this tutorial is presented on the following picture. Upfront to this tutorial, the VirtualBox must be configured so that both virtual machines have one network interface connected to NAT and another network inteface host-only.
+
+INSERIR IMAGEM DAS DUAS INTERFACES
+
+After that, create a virtual machine for the thin client. Set 512mb of RAM and configure the system and the network interface like the following images:
+
+INSERIR IMAGEM ABA SISTEMA E ABA NETWORK
+
+Make sure that the adapter type is PCnet-FAST III otherwise the thin client won't be able to receive the image through TFTP.
 
 
-
-Both servers must know each other. For this, you need to edit the `/etc/hosts`: 
+COLOCAR NO FINAL
+After installing the machines, make sure that both servers know each other. For this, you need to edit the `/etc/hosts`: 
 ```
 127.0.0.1       localhost
 192.168.1.101   ltsp-root01
@@ -24,13 +32,9 @@ Both servers must know each other. For this, you need to edit the `/etc/hosts`:
 
 ## Root Server
 
-Install a 64-bit Ubuntu server to install root server. Do not install anything extra – just SSH server. Make all updates and upgrades:
+Install a 64-bit Ubuntu server to install root server. Do not install anything extra – just SSH server. 
 
-```
-sudo apt-get update
-sudo apt-get dist-upgrade
-```
-Edit the `/etc/network/interfaces` file to set the networkd interfaces. For the Bridge card, set the address as static:
+Edit the `/etc/network/interfaces` file to set the network interfaces. For the host-only adapter (eth0), set the address as static:
 
 ```
 auto lo
@@ -45,15 +49,17 @@ iface eth0 inet static
       netmask 255.255.255.0
       gateway 192.168.1.101
 ```
-Reset the network services so the changes take place.
+Reboot the system.
 ```
-ifconfig eth0 down & ifconfig eth0 up && ifconfig eth1 down & ifconfig eth1 up
-
-OR
-
-sudo /etc/init.d/networking restart
+sudo reboot
 ```
 
+The server should have now both interfaces working and access to the internet through NAT. Now,  make all updates and upgrades:
+
+```
+sudo apt-get update
+sudo apt-get dist-upgrade
+```
 
 ### Install LTSP-Server and isc-dhcp-server
 
@@ -79,13 +85,18 @@ subnet 192.168.1.0 netmask 255.255.255.0 {
   filename "/ltsp/i386/pxelinux.0";
 }
 ```
-Finally, you have to make sure that the file `/etc/default/isc-dhcp-serve` has the following line, which will set the isc-dhcp-server to listen on the bridged inteface (eth1) to serve IPs:
+Finally, you have to make sure that the file `/etc/default/isc-dhcp-server` has the following line, which will set the isc-dhcp-server to listen on the host-only inteface (eth0) to serve IPs:
 ```
-INTERFACES="eth1"
+INTERFACES="eth0"
 ```
 
 Restart isc-dhcp-server:
 ```
 sudo /etc/init.d/isc-dhcp-server restart
 ```
+
+If the command above fail, you can see the log on `/var/log/syslog`.
+
+#### Build Chroot
+
 
