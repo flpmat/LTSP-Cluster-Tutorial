@@ -263,3 +263,90 @@ TIMESERVER = ntp.ubuntu.com
 XKBLAYOUT = en
 ``` 
 In the tab `Nodes`, create a new node by clicking the button `Create Child` and then typiyng the name of your node (name it ltsp-appserv01).
+
+#### Loadbalancer
+
+Install loadbalancer in root server.
+```
+sudo apt-get install ltsp-cluster-lbserver
+```
+Modify information for loadbalancer.
+```
+sudo nano /etc/ltsp/lbsconfig.xml
+```
+Here we have only one application server: <node address="http://192.168.1.102:8000" name="ltsp-appserv01"/>
+
+We have changed group name to “karmic” and max-threads to “1”.
+```
+<?xml version="1.0"?>
+<lbsconfig>
+    <lbservice listen="*:8008" max-threads="1" refresh-delay="60" returns="$IP"/>
+    <lbslave is-slave="false"/>
+    <mgmtservice enabled="true" listen="*:8001"/>
+    <nodes>
+        <group default="true" name="karmic">
+            <node address="http://192.168.1.102:8000" name="ltsp-appserv01"/>
+        </group>
+    </nodes>
+    <rules>
+        <variable name="LOADAVG" weight="50">
+            <rule capacity=".7"/>
+        </variable>
+        <variable name="NBX11SESS" weight="25">
+            <rule capacity="$CPUFREQ*$CPUCOUNT*$CPUCOUNT/120" critical="$CPUFREQ*$CPUCOUNT*$CPUCOUNT/100"/>
+        </variable>
+        <variable name="MEMUSED" weight="25">
+            <rule capacity="$MEMTOTAL-100000"/>
+        </variable>
+    </rules>
+</lbsconfig>
+```
+The application server ltsp-appserv01 has been set as the deafault application server.
+
+We have now root server ready.
+
+## Application Server
+
+Install a 64-bit Ubuntu server to install root server. Do not install anything extra. 
+
+Edit the `/etc/network/interfaces` file to set the network interfaces. For the host-only adapter (eth0), set the address as static:
+
+```
+auto lo
+iface lo inet loopback
+
+auto eth1
+iface eth1 inet dhcp
+
+auto eth0
+iface eth0 inet static
+      address 192.168.1.102
+      netmask 255.255.255.0
+      gateway 192.168.1.102
+```
+Reboot the system.
+```
+sudo reboot
+```
+The server should have now both interfaces working and access to the internet through NAT. Now, make all updates and upgrades:
+
+```
+sudo apt-get update
+sudo apt-get dist-upgrade
+```
+At this point, the Application Server and Root Server should be able to communicate. If not, review your network configurations.
+
+
+
+
+
+
+
+
+TROUBLESHOOTING:
+No network access through NAT: set nat interface as default 
+To see which is your default gateway, run:ip route.
+To delete the current default gateway, run: sudo route delete default gw
+<IP Address> <Adapter>.
+To add a new default gateway, run: sudo route add default gw <IP
+Address> <Adapter>.
