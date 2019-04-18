@@ -229,6 +229,11 @@ Cleaned log table
 Cleaned computershw table
 Regenerated tree
 ```
+Add the following line to the end of `/etc/apache2/apache2.conf` file:
+```
+Include conf.d/*.conf
+```
+
 Start Apache2 again.
 ```
 /etc/init.d/apache2 start
@@ -236,3 +241,25 @@ Start Apache2 again.
 Stop acting like a root user.
 ```
 exit
+```
+Install Xorg and Firefox:
+```
+sudo aptitude install xorg
+sudo apt-get install firefox
+```
+Open your Firefox and go to the admin web page on `http://ltsp-root01/ltsp-cluster-control/Admin/admin.php`.
+```
+startx
+firefox
+```
+In the first page (“Configuration”) make a few changes, this way:
+```
+LANG = en_EN.UTF-8
+LDM_DIRECTX = True
+LDM_SERVER = %LOADBALANCER%
+LOCAL_APPS_MENU = True
+SCREEN_07 = ldm
+TIMESERVER = ntp.ubuntu.com
+XKBLAYOUT = en
+``` 
+In the tab `Nodes`, create a new node by clicking the button `Create Child` and then typiyng the name of your node (name it ltsp-appserv01).
