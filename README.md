@@ -95,8 +95,144 @@ Restart isc-dhcp-server:
 sudo /etc/init.d/isc-dhcp-server restart
 ```
 
-If the command above fail, you can see the log on `/var/log/syslog`.
+If the command above fail, you can see the log on `/var/log/syslog`. You can also test if the isc-dhcp-server is working properly by lauching the thin client virtual machine (you be able to see it getting an IP address in the specified range).
+
+ADICIONAR IMAGEM DE THIN CLIENT RECEBENDO IP
 
 #### Build Chroot
 
+Thin clients need 32-bit chroot. Build that one this way in root server.
+```
+sudo ltsp-build-client --arch i386 --ltsp-cluster --prompt-rootpass
+```
 
+When asked for ltsp-cluster settings answer as follow. Make sure the server name is the IP of the DHCP server for the thin client interface card.
+```
+Configuration of LTSP-Cluster
+NOTE: booleans must be answered as uppercase Y or N
+Server name: 192.168.1.101
+Port (default: 80): 80
+Use SSL [y/N]: N
+Enable hardware inventory [Y/n]: Y
+Request timeout (default: 2): 2
+Root user passwd for chroot will be asked, too.
+```
+```
+Enter new UNIX password: 
+Retype new UNIX password: 
+passwd: password updated successfully
+```
+
+Your answered setup is in this file: /opt/ltsp/i386/etc/ltsp/getltscfg-cluster.conf
+```
+CC_SERVER=192.168.1.101
+PORT=80
+ENABLE_SSL=N
+INVENTORY=Y
+TIMEOUT=2
+```
+There is a command now that you can use to change into chroot:
+```
+sudo ltsp-chroot
+```
+
+#### Ltsp-cluster-control
+
+Install web based admin program for thin clients in root server.
+
+``` 
+sudo apt-get install ltsp-cluster-control postgresql
+```
+
+Modify program's configuration file. Note: Do not left any empty lines before or after php-tags (<?php / ?>) - php will not run!
+```
+sudo nano /etc/ltsp/ltsp-cluster-control.config.php
+```
+In this setup we use this one. Note all database related information.
+```
+<?php
+    $CONFIG['save'] = "Save";
+    $CONFIG['lang'] = "en"; #Language for the interface (en and fr are supported"
+    $CONFIG['charset'] = "UTF-8";
+    $CONFIG['use_https'] = "false"; #Force https
+    $CONFIG['terminal_auth'] = "false";
+    $CONFIG['db_server'] = "localhost"; #Hostname of the database server
+    $CONFIG['db_user'] = "ltsp"; #Username to access the database
+    $CONFIG['db_password'] = "ltsp"; #Password to access the database
+    $CONFIG['db_name'] = "ltsp"; #Database name
+    $CONFIG['db_type'] = "postgres"; #Database type (only postgres is supported)
+    $CONFIG['auth_name'] = "EmptyAuth";
+    $CONFIG['loadbalancer'] = "192.168.1.101"; #Hostname of the loadbalancer
+    $CONFIG['first_setup_lock'] = "TRUE";
+    $CONFIG['printer_servers'] = array("cups.yourdomain.com"); #Hostname(s) of your print servers
+    $CONFIG['rootInstall'] = "/usr/share/ltsp-cluster-control/Admin/";
+?>
+```
+
+Create new user for database. Use same passwd as above (db_password = ltsp)
+
+```
+sudo -u postgres createuser -SDRIP ltsp
+Enter password for new role: 
+Enter it again: 
+```
+
+Create new database.
+```
+sudo -u postgres createdb ltsp -O ltsp
+```
+Move to the new directory and create tables in database.
+```
+cd /usr/share/ltsp-cluster-control/DB/
+cat schema.sql functions.sql | psql -h localhost ltsp ltsp
+Password for user ltsp: 
+```
+Now you have to act as a root user and move to the /root directory.
+```
+sudo su
+cd /root
+```
+Get two files for database.
+```
+wget http://bazaar.launchpad.net/%7Eltsp-cluster-team/ltsp-cluster/ltsp-cluster-control\/download/head%3A/controlcenter.py-20090118065910-j5inpmeqapsuuepd-3/control-center.py
+```
+```
+wget http://bazaar.launchpad.net/%7Eltsp-cluster-team/ltsp-cluster/ltsp-cluster-control\/download/head%3A/rdpldm.config-20090430131602-g0xccqrcx91oxsl0-1/rdp%2Bldm.config
+```
+Modify control-center.py file, use same information for database as above.
+```
+nano control-center.py
+#/usr/bin/python
+import pgdb, os, sys
+
+#FIXME: This should be a configuration file
+db_user="ltsp"
+db_password="ltsp"
+db_host="localhost"
+db_database="ltsp"
+```
+Install one python-package.
+```
+apt-get install python-pygresql
+```
+Stop Apache2 and install two files.
+```
+/etc/init.d/apache2 stop
+python control-center.py rdp+ldm.config
+```
+```
+Cleaned status table
+Cleaned log table
+Cleaned computershw table
+Cleaned status table
+Cleaned log table
+Cleaned computershw table
+Regenerated tree
+Start Apache2 again.
+```
+```
+/etc/init.d/apache2 start
+```
+Stop acting like a root user.
+```
+exit
