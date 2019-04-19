@@ -9,7 +9,9 @@ Some of the LTSP-Cluster Features are:
 * Complete autologin support with account creation
 * Store hardware information for all clients in the control center
 
-In this tutorial, a basic setup of LTSP-Cluster will be installed. For this purpose, we will use VirtualBox where two x86_64/amd64 Ubuntu servers are configured: the first one will be the root server and the second one  the application server. The LTSP-Cluster architecture is presented on the image below and comprises of a root server with a chroot, a load-balancer and a cluster control center; the application server has a LTSBAgent and an account manager running.
+In this tutorial, a basic setup of LTSP-Cluster will be installed. For this purpose, we will use VirtualBox where two x86_64/amd64 Ubuntu servers are configured: the first one will be the root server and the second one the application server. The LTSP-Cluster architecture is presented on the image below and comprises of a root server with a chroot, a load-balancer and a cluster control center; the application server has a LTSBAgent and an account manager running.
+
+INSERT IMAGE OF LTSP-CLUSTER ARCHTECTURE
 
 The network layout built for this tutorial is presented on the following picture. Upfront to this tutorial, the VirtualBox must be configured so that both virtual machines have one network interface connected to NAT and another network inteface host-only.
 
