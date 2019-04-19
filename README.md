@@ -332,7 +332,7 @@ sudo reboot
 ```
 The server should have now both interfaces working and access to the internet through NAT. Now, make all updates and upgrades:
 
-If, at this point, your NAT interface is up and you still don't get internet access, check your default gateway configuration [here](#troubleshooting)
+If, at this point, your NAT interface is up and you still don't get internet access, check your default gateway configuration [default-gateway](#Setting-default-gateway)
 ```
 sudo apt-get update
 sudo apt-get dist-upgrade
@@ -380,11 +380,14 @@ To make sure everything works as expected, turn on your Application Server and o
 
 INSERT IMAGE OF LOG
 
+If the screen above shows a wrong IP for the Application Server, try changing the default gateway to the host-only adapter ([default-gateway](#Setting-default-gateway))
+
 Turn on your Thin Client machine. As this computer is not assigned to a node yet, it will show the following screen upon successful boot:
 
 INSERT INFO SCREEN
+To add the thin client computer to a node, open the ltsp-cluster center and go to the tab `Nodes`. Select the computer on the list and click on Add to AppServ01.
 
-To add the thin client computer to a node, open the ltsp-cluster center and ADD HERE HOW TO 
+ADD HERE HOW TO 
 
 
 
@@ -395,6 +398,8 @@ To add the thin client computer to a node, open the ltsp-cluster center and ADD 
 
 
 ## TROUBLESHOOTING:
+
+### Error on screen_session
 
 You may encouter the following error upon your thin client boot:
 ```
@@ -493,12 +498,19 @@ After that, update the ltsp image:
 ltsp-update-image i386
 ```
 
-No network access through NAT: set nat interface as default 
-To see which is your default gateway, run:ip route.
-To delete the current default gateway, run: sudo route delete default gw
-<IP Address> <Adapter>.
-To add a new default gateway, run: sudo route add default gw <IP
-Address> <Adapter>.
-      
+### Setting default gateway
+Check which default gateway is set:
+```
+ip route
+```
+To delete the current default gateway, run: 
+```
+sudo route delete default gw <IP Address> <Adapter>
+```
+To add a new default gateway, run: 
+```
+sudo route add default gw <IPAddress> <Adapter>
+```   
+
       
 
