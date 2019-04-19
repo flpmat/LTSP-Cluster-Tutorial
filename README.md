@@ -11,7 +11,11 @@ Some of the LTSP-Cluster Features are:
 
 In this tutorial, a basic setup of LTSP-Cluster will be installed. For this purpose, we will use VirtualBox where two x86_64/amd64 Ubuntu servers are configured: the first one will be the root server and the second one the application server. 
 
-Upfront to this tutorial, you must create two VirtualBox machines. These machines must be configured so that both virtual machines have one network interface connected to NAT and another network inteface host-only.
+Upfront to this tutorial, you must create set a host network. Go to `File > Host Network Manager > Create` and set `vboxnet0` like the image below: 
+
+![vboxnet0](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/host-net-configuration.png)
+
+Now, create two VirtualBox machines. These machines must be configured so that both virtual machines have one network interface connected to NAT and another network inteface host-only.
 
 ![Root Server Interface 1](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/root-serv-net-1.png)
 
@@ -23,12 +27,10 @@ Upfront to this tutorial, you must create two VirtualBox machines. These machine
 
 After that, create a virtual machine for the thin client. Set 512mb of RAM and configure the system and the network interface like the following images:
 
-INSERIR IMAGEM ABA SISTEMA E ABA NETWORK
+![Thin Client Interface](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/thin-client-net.png)
 
 Make sure that the adapter type is PCnet-FAST III otherwise the thin client won't be able to receive the image through TFTP.
 
-
-COLOCAR NO FINAL
 After installing the machines, make sure that both servers know each other. For this, you need to edit the `/etc/hosts`: 
 ```
 127.0.0.1       localhost
@@ -59,7 +61,6 @@ Reboot the system.
 ```
 sudo reboot
 ```
-
 The server should have now both interfaces working and access to the internet through NAT. Now,  make all updates and upgrades:
 
 ```
@@ -95,15 +96,14 @@ Finally, you have to make sure that the file `/etc/default/isc-dhcp-server` has 
 ```
 INTERFACES="eth0"
 ```
-
 Restart isc-dhcp-server:
 ```
 sudo /etc/init.d/isc-dhcp-server restart
 ```
+If the command above fail, you probably have erros on `/etc/default/isc-dhcp-server`. See the log `/var/log/syslog`. 
+You can also test if the isc-dhcp-server is working properly by lauching the thin client virtual machine (you be able to see it getting an IP address in the specified range).
 
-If the command above fail, you can see the log on `/var/log/syslog`. You can also test if the isc-dhcp-server is working properly by lauching the thin client virtual machine (you be able to see it getting an IP address in the specified range).
-
-ADICIONAR IMAGEM DE THIN CLIENT RECEBENDO IP
+![dhcp](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/dhcp.png)
 
 #### Build Chroot
 
@@ -111,7 +111,6 @@ Thin clients need 32-bit chroot. Build that one this way in root server.
 ```
 sudo ltsp-build-client --arch i386 --ltsp-cluster --prompt-rootpass
 ```
-
 When asked for ltsp-cluster settings answer as follow. Make sure the server name is the IP of the DHCP server for the thin client interface card.
 ```
 Configuration of LTSP-Cluster
@@ -128,7 +127,6 @@ Enter new UNIX password:
 Retype new UNIX password: 
 passwd: password updated successfully
 ```
-
 Your answered setup is in this file: /opt/ltsp/i386/etc/ltsp/getltscfg-cluster.conf
 ```
 CC_SERVER=192.168.1.101
@@ -145,11 +143,9 @@ sudo ltsp-chroot
 #### Ltsp-cluster-control
 
 Install web based admin program for thin clients in root server.
-
 ``` 
 sudo apt-get install ltsp-cluster-control postgresql
 ```
-
 Modify program's configuration file. Note: Do not left any empty lines before or after php-tags (<?php / ?>) - php will not run!
 ```
 sudo nano /etc/ltsp/ltsp-cluster-control.config.php
@@ -176,13 +172,11 @@ In this setup we use this one. Note all database related information.
 ```
 
 Create new user for database. Use same passwd as above (db_password = ltsp)
-
 ```
 sudo -u postgres createuser -SDRIP ltsp
 Enter password for new role: 
 Enter it again: 
 ```
-
 Create new database.
 ```
 sudo -u postgres createdb ltsp -O ltsp
@@ -239,7 +233,6 @@ Add the following line to the end of `/etc/apache2/apache2.conf` file:
 ```
 Include conf.d/*.conf
 ```
-
 Start Apache2 again.
 ```
 /etc/init.d/apache2 start
@@ -335,14 +328,13 @@ Reboot the system.
 sudo reboot
 ```
 The server should have now both interfaces working and access to the internet through NAT. Now, make all updates and upgrades:
-
-If, at this point, your NAT interface is up and you still don't get internet access, check your default gateway configuration [default-gateway](#Setting-default-gateway)
 ```
 sudo apt-get update
 sudo apt-get dist-upgrade
 ```
-At this point, the Application Server and Root Server should be able to communicate. If not, review your network configurations.
+If, at this point, your NAT interface is up and you still don't get internet access to run the commands above, check your [default gateway configuration](#Setting-default-gateway)
 
+At this point, the Application Server and Root Server should be able to communicate. If not, review your network configurations.
 Install the following packages:
 ```
 sudo apt-get install ubuntu-desktop ltsp-server ltsp-cluster-lbagent ltsp-cluster-accountmanager
@@ -382,24 +374,21 @@ You now have a working Application Server.
 
 To make sure everything works as expected, turn on your Application Server and only after turn on your Root Server. In the root server, the `/var/log/ltsp-cluster-lbserver.log` log file should look like this:
 
-INSERT IMAGE OF LOG
+![LTSP Log](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/ltsp-log.png)
 
 If the screen above shows a wrong IP for the Application Server, try changing the default gateway to the host-only adapter ([default-gateway](#Setting-default-gateway))
 
 Turn on your Thin Client machine. As this computer is not assigned to a node yet, it will show the following screen upon successful boot:
 
-INSERT INFO SCREEN
-To add the thin client computer to a node, open the ltsp-cluster center and go to the tab `Nodes`. Select the computer on the list and click on Add to AppServ01.
+![Thin Client Info](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/thin-client-info.png)
+Change to
+To add the thin client computer to a node, open the ltsp-cluster center and go to the tab `Nodes`. Change to AppServ01 node, select the computer on the list and click on Add to AppServ01:
 
-ADD HERE HOW TO 
+![Step 1](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/add to app 1.png)
 
+![Step 2](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/move to app 2.png)
 
-
-
-
-
-
-
+[Click here](http://google.com) for more detailed instructions.
 
 ## TROUBLESHOOTING:
 
