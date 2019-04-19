@@ -336,6 +336,52 @@ sudo apt-get dist-upgrade
 ```
 At this point, the Application Server and Root Server should be able to communicate. If not, review your network configurations.
 
+Install the following packages:
+```
+sudo apt-get install ubuntu-desktop ltsp-server ltsp-cluster-lbagent ltsp-cluster-accountmanager
+```
+Remove following service:
+```
+sudo update-rc.d -f nbd-server remove
+sudo update-rc.d -f gdm remove
+sudo update-rc.d -f bluetooth remove
+sudo update-rc.d -f pulseaudio remove
+```
+Create following file and copy this inside that file:
+```
+sudo nano /etc/xdg/autostart/pulseaudio-module-suspend-on-idle.desktop
+
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Name=PulseAudio Session Management
+Comment=Load module-suspend-on-idle into PulseAudio
+Exec=pactl load-module module-suspend-on-idle
+Terminal=false
+Type=Application
+Categories=
+GenericName=
+```
+Create a test user and add user to the following groups:
+```
+sudo adduser ltsp001
+sudo adduser ltsp001 fuse
+sudo adduser ltsp001 audio
+sudo adduser ltsp001 video
+```
+You now have a working Application Server.
+
+## Running
+
+To make sure everything works as expected, turn on your Application Server and only after turn on your Root Server. In the root server, the `/var/log/ltsp-cluster-lbserver.log` log file should look like this:
+
+INSERT IMAGE OF LOG
+
+Turn on your Thin Client machine. As this computer is not assigned to a node yet, it will show the following screen upon successful boot:
+
+INSERT INFO SCREEN
+
+To add the thin client computer to a node, open the ltsp-cluster center and ADD HERE HOW TO 
 
 
 
@@ -343,10 +389,113 @@ At this point, the Application Server and Root Server should be able to communic
 
 
 
-TROUBLESHOOTING:
+
+
+## TROUBLESHOOTING:
+
+You may encouter the following error upon your thin client boot:
+```
+./screen_session: 48: [: Illegal number:
+./screen_session: 78: ./screen_session: /usr/share/ltsp/screen.d/: Permission denied
+```
+To fix this, substitute the content of the file `/opt/ltsp/amd64/usr/share/ltsp/screen_session` with the content below:
+```
+#!/bin/sh
+#
+#  Copyright (c) 2002 McQuillan Systems, LLC
+#
+#  Author: James A. McQuillan <jam@McQuil.com>
+#
+#  2005, Matt Zimmerman <mdz@canonical.com>
+#  2006, Oliver Grawert <ogra@canonical.com>
+#  2007, Scott Balneaves <sbalneav@ltsp.org>
+#  2008, Warren Togami <wtogami@redhat.com>
+#        Stephane Graber <stgraber@ubuntu.com>
+#        Vagrant Cascadian <vagrant@freegeek.org>
+#        Gideon Romm <ltsp@symbio-technologies.com>
+#  2012, Alkis Georgopoulos <alkisg@gmail.com>
+#  2014, Maximiliano Boscovich <maximiliano@boscovich.com.ar>
+#  
+#  This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License as
+#  published by the Free Software Foundation; either version 2 of the
+#  License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, you can find it on the World Wide
+#  Web at http://www.gnu.org/copyleft/gpl.html, or write to the Free
+#  Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+#  MA 02110-1301, USA.
+#
+
+# Load LTSP configuration
+# ltsp_config sources ltsp-client-functions
+. /usr/share/ltsp/ltsp_config
+
+case "$1" in
+    [0-1][0-9])
+        export SCREEN_NUM="$1"
+        ;;
+    *)
+        die "Usage: $0 [01..12]"
+        ;;
+esac
+
+while true; do
+    # Wait until this is the active vt before launching the screen script
+    while [ $(fgconsole) -ne "$SCREEN_NUM" ]; do
+        sleep 2
+    done
+
+    if [ -f /etc/ltsp/getltscfg-cluster.conf ]; then
+        # Reset the environement
+        unset $(env | egrep '^(\w+)=(.*)$' | egrep -vw 'PWD|USER|PATH|HOME|SCREEN_NUM' | /usr/bin/cut -d= -f1)
+        . /usr/share/ltsp/ltsp_config
+        eval $(getltscfg-cluster -a -l prompt)
+    fi
+
+    read script args <<EOF
+$(eval echo "\$SCREEN_$SCREEN_NUM")
+EOF
+
+    # Screen scripts in /etc override those in /usr
+    unset script_path
+    for dir in /etc/ltsp/screen.d /usr/share/ltsp/screen.d; do
+        if [ -x "$dir/$script" ]; then
+            script_path="$dir/$script"
+            break
+        fi
+    done
+    if [ -z "$script_path" ]; then
+        die "Script '$script' for SCREEN_$SCREEN_NUM was not found"
+    fi
+
+    for script in $(run_parts_list /usr/share/ltsp/screen-session.d/ S); do
+        . "$script"
+    done
+    "$script_path" "$args"
+    for script in $(run_parts_list /usr/share/ltsp/screen-session.d/ K); do
+        . "$script"
+    done
+done
+``` 
+
+After that, update the ltsp image:
+```
+ltsp-update-image i386
+```
+
 No network access through NAT: set nat interface as default 
 To see which is your default gateway, run:ip route.
 To delete the current default gateway, run: sudo route delete default gw
 <IP Address> <Adapter>.
 To add a new default gateway, run: sudo route add default gw <IP
 Address> <Adapter>.
+      
+      
+
