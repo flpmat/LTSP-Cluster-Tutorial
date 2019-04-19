@@ -332,6 +332,7 @@ sudo reboot
 ```
 The server should have now both interfaces working and access to the internet through NAT. Now, make all updates and upgrades:
 
+If, at this point, your NAT interface is up and you still don't get internet access, check your default gateway configuration [here](#troubleshooting)
 ```
 sudo apt-get update
 sudo apt-get dist-upgrade
