@@ -9,25 +9,32 @@ Some of the LTSP-Cluster Features are:
 * Complete autologin support with account creation
 * Store hardware information for all clients in the control center
 
-In this tutorial, a basic setup of LTSP-Cluster will be installed. For this purpose, we will use VirtualBox where two x86_64/amd64 Ubuntu servers are configured: the first one will be the root server and the second one the application server. 
+In this tutorial, a basic setup of LTSP-Cluster will be installed. For this purpose, we will use VirtualBox where two x86_64/amd64 Ubuntu servers are configured: the first one will be the root server and the second one the application server.
+
+## Architecture
+
+[TO-DO] Include a diagram showing the machines, the network, theirs roles and main services running on each machine.
+
+## Creation of Virtual Machines
 
 Upfront to this tutorial, you must create set a host network. Go to `File > Host Network Manager > Create` and set `vboxnet0` like the image below: 
 
-![vboxnet0](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/host-net-configuration.png)
+![vboxnet0](images/host-net-configuration.png)
+[TO-DO] Save this image in the repository.
 
-Now, create two VirtualBox machines. These machines must be configured so that both virtual machines have one network interface connected to NAT and another network inteface host-only.
+Now, create two VirtualBox machines.
+These machines must be configured so that both virtual machines have one network interface connected to NAT and another network inteface host-only.
 
-![Root Server Interface 1](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/root-serv-net-1.png)
+![Root Server Interface 1](images/root-serv-net-1.png)
 
-![Root Server Interface 2](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/root-serv-net-2.png)
+![Root Server Interface 2](images/root-serv-net-2.png)
 
-![App Server Interface 1](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/app-serv-net-1.png)
-
-![App Server Interface 2](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/app-serv-net-2.png)
+Make sure that the adapter type is PCnet-FAST III otherwise the thin client won't be able to receive the image through TFTP.
 
 After that, create a virtual machine for the thin client. Set 512mb of RAM and configure the system and the network interface like the following images:
 
-![Thin Client Interface](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/thin-client-net.png)
+![Thin Client Interface](images/thin-client-net.png)
+[TO-DO] Save this image in the repository.
 
 Make sure that the adapter type is PCnet-FAST III otherwise the thin client won't be able to receive the image through TFTP.
 
@@ -57,10 +64,13 @@ iface eth0 inet static
       netmask 255.255.255.0
       gateway 192.168.1.101
 ```
+
 Reboot the system.
+
 ```
 sudo reboot
 ```
+
 The server should have now both interfaces working and access to the internet through NAT. Now,  make all updates and upgrades:
 
 ```
@@ -73,6 +83,7 @@ sudo apt-get dist-upgrade
 ```
 sudo apt-get install ltsp-server isc-dhcp-server
 ```
+
 The command above will install the ltsp server (which will serve the image to all clients) and the DHCP service.
 
 We must edit the DHCP server configuration file `/etc/dhcp/dhcpd.conf` adding:
@@ -92,26 +103,37 @@ subnet 192.168.1.0 netmask 255.255.255.0 {
   filename "/ltsp/i386/pxelinux.0";
 }
 ```
+
 Finally, you have to make sure that the file `/etc/default/isc-dhcp-server` has the following line, which will set the isc-dhcp-server to listen on the host-only inteface (eth0) to serve IPs:
+
 ```
 INTERFACES="eth0"
 ```
+
 Restart isc-dhcp-server:
+
 ```
 sudo /etc/init.d/isc-dhcp-server restart
 ```
-If the command above fail, you probably have erros on `/etc/default/isc-dhcp-server`. See the log `/var/log/syslog`. 
+
+If the command above fail, you probably have errors on `/etc/default/isc-dhcp-server`. 
+See the log `/var/log/syslog`.
 You can also test if the isc-dhcp-server is working properly by lauching the thin client virtual machine (you be able to see it getting an IP address in the specified range).
 
-![dhcp](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/dhcp.png)
+![dhcp](images/dhcp.png)
 
 #### Build Chroot
 
-Thin clients need 32-bit chroot. Build that one this way in root server.
+Thin clients need 32-bit chroot. 
+Build one this way in root server.
+
 ```
 sudo ltsp-build-client --arch i386 --ltsp-cluster --prompt-rootpass
 ```
-When asked for ltsp-cluster settings answer as follow. Make sure the server name is the IP of the DHCP server for the thin client interface card.
+
+When asked for ltsp-cluster settings answer as follow.
+Make sure the server name is the IP of the DHCP server for the thin client interface card.
+
 ```
 Configuration of LTSP-Cluster
 NOTE: booleans must be answered as uppercase Y or N
@@ -120,22 +142,28 @@ Port (default: 80): 80
 Use SSL [y/N]: N
 Enable hardware inventory [Y/n]: Y
 Request timeout (default: 2): 2
-Root user passwd for chroot will be asked, too.
 ```
+
+Root user passwd for chroot will be asked, too.
+
 ```
 Enter new UNIX password: 
 Retype new UNIX password: 
 passwd: password updated successfully
 ```
+
 Your answered setup is in this file: /opt/ltsp/i386/etc/ltsp/getltscfg-cluster.conf
-```
+
+```conf
 CC_SERVER=192.168.1.101
 PORT=80
 ENABLE_SSL=N
 INVENTORY=Y
 TIMEOUT=2
 ```
+
 There is a command now that you can use to change into chroot:
+
 ```
 sudo ltsp-chroot
 ```
@@ -143,15 +171,20 @@ sudo ltsp-chroot
 #### Ltsp-cluster-control
 
 Install web based admin program for thin clients in root server.
+
 ``` 
 sudo apt-get install ltsp-cluster-control postgresql
 ```
-Modify program's configuration file. Note: Do not left any empty lines before or after php-tags (<?php / ?>) - php will not run!
+
+Modify program's configuration file. Note: Do not leave any empty lines before or after php-tags (<?php / ?>) - php will not run!
+
 ```
 sudo nano /etc/ltsp/ltsp-cluster-control.config.php
 ```
+
 In this setup we use this one. Note all database related information.
-```
+
+```php
 <?php
     $CONFIG['save'] = "Save";
     $CONFIG['lang'] = "en"; #Language for the interface (en and fr are supported"
@@ -172,34 +205,46 @@ In this setup we use this one. Note all database related information.
 ```
 
 Create new user for database. Use same passwd as above (db_password = ltsp)
+
 ```
 sudo -u postgres createuser -SDRIP ltsp
-Enter password for new role: 
-Enter it again: 
+Enter password for new role:
+Enter it again:
 ```
+
 Create new database.
+
 ```
 sudo -u postgres createdb ltsp -O ltsp
 ```
+
 Move to the new directory and create tables in database.
+
 ```
 cd /usr/share/ltsp-cluster-control/DB/
 cat schema.sql functions.sql | psql -h localhost ltsp ltsp
-Password for user ltsp: 
+Password for user ltsp:
 ```
+
 Now you have to act as a root user and move to the /root directory.
+
 ```
 sudo su
 cd /root
 ```
-Get two files for database.
+
+Get two files for database.[TO-DO] Save these two files in this repository.
+
 ```
 wget http://bazaar.launchpad.net/%7Eltsp-cluster-team/ltsp-cluster/ltsp-cluster-control\/download/head%3A/controlcenter.py-20090118065910-j5inpmeqapsuuepd-3/control-center.py
 ```
+
 ```
 wget http://bazaar.launchpad.net/%7Eltsp-cluster-team/ltsp-cluster/ltsp-cluster-control\/download/head%3A/rdpldm.config-20090430131602-g0xccqrcx91oxsl0-1/rdp%2Bldm.config
 ```
+
 Modify control-center.py file, use same information for database as above.
+
 ```
 nano control-center.py
 #/usr/bin/python
@@ -211,15 +256,19 @@ db_password="ltsp"
 db_host="localhost"
 db_database="ltsp"
 ```
+
 Install one python-package.
+
 ```
-apt-get install python-pygresql
+$ apt-get install python-pygresql
 ```
-Stop Apache2 and install two files.
+
+Stop Apache2 and install the two files.
 ```
 /etc/init.d/apache2 stop
 python control-center.py rdp+ldm.config
 ```
+
 ```
 Cleaned status table
 Cleaned log table
@@ -229,30 +278,42 @@ Cleaned log table
 Cleaned computershw table
 Regenerated tree
 ```
+
 Add the following line to the end of `/etc/apache2/apache2.conf` file:
-```
+
+```conf
 Include conf.d/*.conf
 ```
+
 Start Apache2 again.
+
+```console
+# /etc/init.d/apache2 start
 ```
-/etc/init.d/apache2 start
-```
+
 Stop acting like a root user.
+
+```console
+# exit
 ```
-exit
-```
+
 Install Xorg and Firefox:
+
 ```
 sudo aptitude install xorg
 sudo apt-get install firefox
 ```
+
 Open your Firefox and go to the admin web page on `http://ltsp-root01/ltsp-cluster-control/Admin/admin.php`.
+
 ```
 startx
 firefox
 ```
+
 In the first page (“Configuration”) make a few changes, this way:
-```
+
+```conf
 LANG = en_EN.UTF-8
 LDM_DIRECTX = True
 LDM_SERVER = %LOADBALANCER%
@@ -263,20 +324,27 @@ XKBLAYOUT = en
 ``` 
 In the tab `Nodes`, create a new node by clicking the button `Create Child` and then typiyng the name of your node (name it ltsp-appserv01).
 
+[TO-DO] Insert a print screen here.
+
 #### Loadbalancer
 
 Install loadbalancer in root server.
+
+```console
+$ sudo apt-get install ltsp-cluster-lbserver
 ```
-sudo apt-get install ltsp-cluster-lbserver
-```
+
 Modify information for loadbalancer.
+
+```conosole
+$ sudo nano /etc/ltsp/lbsconfig.xml
 ```
-sudo nano /etc/ltsp/lbsconfig.xml
-```
+
 Here we have only one application server: <node address="http://192.168.1.102:8000" name="ltsp-appserv01"/>
 
 We have changed group name to “karmic” and max-threads to “1”.
-```
+
+```xml
 <?xml version="1.0"?>
 <lbsconfig>
     <lbservice listen="*:8008" max-threads="1" refresh-delay="60" returns="$IP"/>
@@ -323,33 +391,48 @@ iface eth0 inet static
       netmask 255.255.255.0
       gateway 192.168.1.102
 ```
+
 Reboot the system.
+```console
+$ sudo reboot
 ```
-sudo reboot
-```
+
 The server should have now both interfaces working and access to the internet through NAT. Now, make all updates and upgrades:
+
 ```
-sudo apt-get update
-sudo apt-get dist-upgrade
+$ sudo apt-get update
+$ sudo apt-get dist-upgrade
 ```
-If, at this point, your NAT interface is up and you still don't get internet access to run the commands above, check your [default gateway configuration](#Setting-default-gateway)
+
+If, at this point, your NAT interface is up and you still don't get Internet access to run the commands above, check your [default gateway configuration](#Setting-default-gateway)
 
 At this point, the Application Server and Root Server should be able to communicate. If not, review your network configurations.
+
+
 Install the following packages:
+
 ```
 sudo apt-get install ubuntu-desktop ltsp-server ltsp-cluster-lbagent ltsp-cluster-accountmanager
 ```
+
 Remove following service:
+
 ```
 sudo update-rc.d -f nbd-server remove
 sudo update-rc.d -f gdm remove
 sudo update-rc.d -f bluetooth remove
 sudo update-rc.d -f pulseaudio remove
 ```
-Create following file and copy this inside that file:
-```
-sudo nano /etc/xdg/autostart/pulseaudio-module-suspend-on-idle.desktop
 
+Create following file and copy this inside that file:
+
+```console
+sudo nano /etc/xdg/autostart/pulseaudio-module-suspend-on-idle.desktop
+```
+
+/etc/xdg/autostart/pulseaudio-module-suspend-on-idle.desktop
+
+```conf
 [Desktop Entry]
 Version=1.0
 Encoding=UTF-8
@@ -361,46 +444,57 @@ Type=Application
 Categories=
 GenericName=
 ```
+
 Create a test user and add user to the following groups:
+
 ```
 sudo adduser ltsp001
 sudo adduser ltsp001 fuse
 sudo adduser ltsp001 audio
 sudo adduser ltsp001 video
 ```
+
 You now have a working Application Server.
 
 ## Running
 
-To make sure everything works as expected, turn on your Application Server and only after turn on your Root Server. In the root server, the `/var/log/ltsp-cluster-lbserver.log` log file should look like this:
+To make sure everything works as expected, turn on your Application Server and only after turn on your Root Server. 
+In the root server, the `/var/log/ltsp-cluster-lbserver.log` log file should look like this:
 
-![LTSP Log](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/ltsp-log.png)
+![LTSP Log](images/ltsp-log.png)
 
 If the screen above shows a wrong IP for the Application Server, try changing the default gateway to the host-only adapter ([default-gateway](#Setting-default-gateway))
 
-Turn on your Thin Client machine. As this computer is not assigned to a node yet, it will show the following screen upon successful boot:
+Turn on your Thin Client machine.
+As this computer is not assigned to a node yet, it will show the following screen upon successful boot:
 
-![Thin Client Info](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/thin-client-info.png)
-Change to
-To add the thin client computer to a node, open the ltsp-cluster center and go to the tab `Nodes`. Change to AppServ01 node, select the computer on the list and click on Add to AppServ01:
+![Thin Client Info](images/thin-client-info.png)
 
-![Step 1](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/add to app 1.png)
+To add the thin client computer to a node, open the ltsp-cluster center and go to the tab `Nodes`.
+Change to AppServ01 node, select the computer on the list and click on Add to AppServ01:
 
-![Step 2](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/move to app 2.png)
+![Step 1](images/add-to-app-1.png)
+
+![Step 2](images/move-to-app-2.png)
 
 [Click here](http://google.com) for more detailed instructions.
 
-## TROUBLESHOOTING:
+[TO-DO] Explain these past two images and the link (linking to google.com for more instructions???).
+
+## TROUBLESHOOTING
 
 ### Error on screen_session
 
 You may encouter the following error upon your thin client boot:
+
 ```
 ./screen_session: 48: [: Illegal number:
 ./screen_session: 78: ./screen_session: /usr/share/ltsp/screen.d/: Permission denied
 ```
+
 To fix this, substitute the content of the file `/opt/ltsp/amd64/usr/share/ltsp/screen_session` with the content below:
-```
+
+```bash
 #!/bin/sh
 #
 #  Copyright (c) 2002 McQuillan Systems, LLC
@@ -484,26 +578,30 @@ EOF
         . "$script"
     done
 done
-``` 
+```
 
 After that, update the ltsp image:
-```
+
+```console
 ltsp-update-image i386
 ```
 
 ### Setting default gateway
+
 Check which default gateway is set:
+
 ```
 ip route
 ```
-To delete the current default gateway, run: 
+
+To delete the current default gateway, run:
+
 ```
 sudo route delete default gw <IP Address> <Adapter>
 ```
+
 To add a new default gateway, run: 
+
 ```
 sudo route add default gw <IPAddress> <Adapter>
-```   
-
-      
-
+```
