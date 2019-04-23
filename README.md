@@ -11,7 +11,7 @@ Some of the LTSP-Cluster Features are:
 
 In this tutorial, a basic setup of LTSP-Cluster will be installed. For this purpose, we will use VirtualBox where two x86_64/amd64 Ubuntu servers are configured: the first one will be the root server and the second one the application server. 
 
-Upfront to this tutorial, you must create set a host network. Go to `File > Host Network Manager > Create` and set `vboxnet0` like the image below: 
+Upfront to this tutorial, you must set a host network. Go to `File > Host Network Manager > Create` and set `vboxnet0` like the image below: 
 
 ![vboxnet0](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/host-net-configuration.png)
 
@@ -504,6 +504,3 @@ To add a new default gateway, run:
 ```
 sudo route add default gw <IPAddress> <Adapter>
 ```   
-
-      
-
