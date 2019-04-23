@@ -388,7 +388,7 @@ To add the thin client computer to a node, open the ltsp-cluster center and go t
 
 ![Step 2](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/move to app 2.png)
 
-[Click here](http://google.com) for more detailed instructions.
+[Click here](https://www.youtube.com/watch?v=7QdYW-NT_sw) for more detailed instructions.
 
 ## TROUBLESHOOTING:
 
