@@ -1,5 +1,15 @@
 # LTSP-Cluster (Tutorial)
 
+# Table of Contents
+1. [LTSP-Cluster](#LSTP-Cluster)
+2. [Root Server](#root-server)
+3. [Application Server](#application-server)
+4. [Running](#Running)
+5. [Troubleshooting](#Troubleshoot)
+6. [References](#References)
+
+# LTSP-Cluster
+
 LTSP-Cluster is a set of LTSP plugins and client-side tools that allows you to deploy and centrally manage large numbers of thin-clients. It allows you to run thousands of thin-clients that are able to connect to a load-balanced cluster of GNU/Linux and-or Microsoft Windows terminal servers.
 
 Some of the LTSP-Cluster Features are:
@@ -11,9 +21,7 @@ Some of the LTSP-Cluster Features are:
 
 In this tutorial, a basic setup of LTSP-Cluster will be installed. For this purpose, we will use VirtualBox where two x86_64/amd64 Ubuntu servers are configured: the first one will be the root server and the second one the application server. 
 
-Upfront to this tutorial, you must set a host network. Go to `File > Host Network Manager > Create` and set `vboxnet0` like the image below: 
-
-![vboxnet0](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/host-net-configuration.png)
+Upfront to this tutorial, you must set a host network. Go to `File > Host Network Manager > Create` and set `vboxnet0` for the network 192.160.1.0.
 
 Now, create two VirtualBox machines. These machines must be configured so that both virtual machines have one network interface connected to NAT and another network inteface host-only.
 
@@ -34,7 +42,7 @@ After installing the machines, make sure that both servers know each other. For 
 192.168.1.102   ltsp-appserv01
 ```
 
-## Root Server
+# Root Server
 
 Install a 64-bit Ubuntu server to install root server. Do not install anything extra – just SSH server. 
 
@@ -63,7 +71,7 @@ sudo apt-get update
 sudo apt-get dist-upgrade
 ```
 
-### Install LTSP-Server and isc-dhcp-server
+## Install LTSP-Server and isc-dhcp-server
 
 ```console
 sudo apt-get install ltsp-server isc-dhcp-server
@@ -100,7 +108,7 @@ You can also test if the isc-dhcp-server is working properly by lauching the thi
 
 ![dhcp](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/dhcp.png)
 
-#### Build Chroot
+### Build Chroot
 
 Thin clients need 32-bit chroot. Build that one this way in root server.
 ```console
@@ -135,7 +143,7 @@ There is a command now that you can use to change into chroot:
 sudo ltsp-chroot
 ```
 
-#### Ltsp-cluster-control
+### Ltsp-cluster-control
 
 Install web based admin program for thin clients in root server.
 ``` console
@@ -258,7 +266,7 @@ XKBLAYOUT = en
 ``` 
 In the tab `Nodes`, create a new node by clicking the button `Create Child` and then typiyng the name of your node (name it ltsp-appserv01).
 
-#### Loadbalancer
+### Loadbalancer
 
 Install loadbalancer in root server.
 ```console
@@ -299,7 +307,7 @@ The application server ltsp-appserv01 has been set as the deafault application s
 
 We have now root server ready.
 
-## Application Server
+# Application Server
 
 Install a 64-bit Ubuntu server to install root server. Do not install anything extra. 
 
@@ -363,7 +371,7 @@ adduser ltsp001 video
 ```
 You now have a working Application Server.
 
-## Running
+# Running
 
 To make sure everything works as expected, turn on your Application Server and only after turn on your Root Server. In the root server, the `/var/log/ltsp-cluster-lbserver.log` log file should look like this:
 
@@ -385,9 +393,9 @@ Select the computer on the list and click on `Move to AppServ01`:
 
 [Click here](https://www.youtube.com/watch?v=7QdYW-NT_sw) for more detailed instructions.
 
-## TROUBLESHOOTING:
+# Troubleshooting:
 
-### Error on screen_session
+## Error on screen_session
 
 You may encouter the following error upon your thin client boot:
 ```
@@ -486,7 +494,7 @@ After that, update the ltsp image:
 ltsp-update-image i386
 ```
 
-### Setting default gateway
+## Setting default gateway
 Check which default gateway is set:
 ```console
 ip route
@@ -499,3 +507,7 @@ To add a new default gateway, run:
 ```console
 sudo route add default gw <IPAddress> <Adapter>
 ```   
+# References
+* [UbuntuLTSP/LTSP-Cluster Tutorial](https://help.ubuntu.com/community/UbuntuLTSP/LTSP-Cluster)
+* [control-center.py (original file)](http://bazaar.launchpad.net/%7Eltsp-cluster-team/ltsp-cluster/ltsp-cluster-control\/download/head%3A/controlcenter.py-20090118065910-j5inpmeqapsuuepd-3/control-center.py)
+* [rdp-ldm.config (original file)](http://bazaar.launchpad.net/%7Eltsp-cluster-team/ltsp-cluster/ltsp-cluster-control\/download/head%3A/rdpldm.config-20090430131602-g0xccqrcx91oxsl0-1/rdp%2Bldm.config)
