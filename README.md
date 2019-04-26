@@ -21,10 +21,6 @@ Now, create two VirtualBox machines. These machines must be configured so that b
 
 ![Root Server Interface 2](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/root-serv-net-2.png)
 
-![App Server Interface 1](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/app-serv-net-1.png)
-
-![App Server Interface 2](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/app-serv-net-2.png)
-
 After that, create a virtual machine for the thin client. Set 512mb of RAM and configure the system and the network interface like the following images:
 
 ![Thin Client Interface](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/thin-client-net.png)
@@ -62,22 +58,21 @@ Reboot the system.
 sudo reboot
 ```
 The server should have now both interfaces working and access to the internet through NAT. Now,  make all updates and upgrades:
-
-```
+```console
 sudo apt-get update
 sudo apt-get dist-upgrade
 ```
 
 ### Install LTSP-Server and isc-dhcp-server
 
-```
+```console
 sudo apt-get install ltsp-server isc-dhcp-server
 ```
 The command above will install the ltsp server (which will serve the image to all clients) and the DHCP service.
 
 We must edit the DHCP server configuration file `/etc/dhcp/dhcpd.conf` adding:
 
-```
+```conf
 ddns-update-style none;
 default-lease-time 600;
 max-lease-time 7200;
@@ -93,11 +88,11 @@ subnet 192.168.1.0 netmask 255.255.255.0 {
 }
 ```
 Finally, you have to make sure that the file `/etc/default/isc-dhcp-server` has the following line, which will set the isc-dhcp-server to listen on the host-only inteface (eth0) to serve IPs:
-```
+```conf
 INTERFACES="eth0"
 ```
 Restart isc-dhcp-server:
-```
+```console
 sudo /etc/init.d/isc-dhcp-server restart
 ```
 If the command above fail, you probably have erros on `/etc/default/isc-dhcp-server`. See the log `/var/log/syslog`. 
@@ -108,11 +103,11 @@ You can also test if the isc-dhcp-server is working properly by lauching the thi
 #### Build Chroot
 
 Thin clients need 32-bit chroot. Build that one this way in root server.
-```
+```console
 sudo ltsp-build-client --arch i386 --ltsp-cluster --prompt-rootpass
 ```
 When asked for ltsp-cluster settings answer as follow. Make sure the server name is the IP of the DHCP server for the thin client interface card.
-```
+```console
 Configuration of LTSP-Cluster
 NOTE: booleans must be answered as uppercase Y or N
 Server name: 192.168.1.101
@@ -122,13 +117,13 @@ Enable hardware inventory [Y/n]: Y
 Request timeout (default: 2): 2
 Root user passwd for chroot will be asked, too.
 ```
-```
+```console
 Enter new UNIX password: 
 Retype new UNIX password: 
 passwd: password updated successfully
 ```
 Your answered setup is in this file: /opt/ltsp/i386/etc/ltsp/getltscfg-cluster.conf
-```
+```conf
 CC_SERVER=192.168.1.101
 PORT=80
 ENABLE_SSL=N
@@ -136,22 +131,22 @@ INVENTORY=Y
 TIMEOUT=2
 ```
 There is a command now that you can use to change into chroot:
-```
+```console
 sudo ltsp-chroot
 ```
 
 #### Ltsp-cluster-control
 
 Install web based admin program for thin clients in root server.
-``` 
+``` console
 sudo apt-get install ltsp-cluster-control postgresql
 ```
 Modify program's configuration file. Note: Do not left any empty lines before or after php-tags (<?php / ?>) - php will not run!
-```
+```console
 sudo nano /etc/ltsp/ltsp-cluster-control.config.php
 ```
 In this setup we use this one. Note all database related information.
-```
+```php
 <?php
     $CONFIG['save'] = "Save";
     $CONFIG['lang'] = "en"; #Language for the interface (en and fr are supported"
@@ -172,36 +167,35 @@ In this setup we use this one. Note all database related information.
 ```
 
 Create new user for database. Use same passwd as above (db_password = ltsp)
-```
+```console
 sudo -u postgres createuser -SDRIP ltsp
 Enter password for new role: 
 Enter it again: 
 ```
 Create new database.
-```
+```console
 sudo -u postgres createdb ltsp -O ltsp
 ```
 Move to the new directory and create tables in database.
-```
+```console
 cd /usr/share/ltsp-cluster-control/DB/
 cat schema.sql functions.sql | psql -h localhost ltsp ltsp
 Password for user ltsp: 
 ```
 Now you have to act as a root user and move to the /root directory.
-```
+```console
 sudo su
 cd /root
 ```
 Get two files for database.
+```console
+wget https://raw.githubusercontent.com/flpmat/LTSP-Cluster-Tutorial/master/files/control-center.py
 ```
-wget http://bazaar.launchpad.net/%7Eltsp-cluster-team/ltsp-cluster/ltsp-cluster-control\/download/head%3A/controlcenter.py-20090118065910-j5inpmeqapsuuepd-3/control-center.py
+```console
+wget https://raw.githubusercontent.com/flpmat/LTSP-Cluster-Tutorial/master/files/rdp%2Bldm.config
 ```
-```
-wget http://bazaar.launchpad.net/%7Eltsp-cluster-team/ltsp-cluster/ltsp-cluster-control\/download/head%3A/rdpldm.config-20090430131602-g0xccqrcx91oxsl0-1/rdp%2Bldm.config
-```
-Modify control-center.py file, use same information for database as above.
-```
-nano control-center.py
+Modify control-center.py file you just downloaded. Use same information for database as below:
+```python
 #/usr/bin/python
 import pgdb, os, sys
 
@@ -212,15 +206,16 @@ db_host="localhost"
 db_database="ltsp"
 ```
 Install one python-package.
-```
+```console
 apt-get install python-pygresql
 ```
 Stop Apache2 and install two files.
-```
+```console
 /etc/init.d/apache2 stop
 python control-center.py rdp+ldm.config
 ```
-```
+You will see the following results printed on the console:
+```console
 Cleaned status table
 Cleaned log table
 Cleaned computershw table
@@ -230,24 +225,24 @@ Cleaned computershw table
 Regenerated tree
 ```
 Add the following line to the end of `/etc/apache2/apache2.conf` file:
-```
+```conf
 Include conf.d/*.conf
 ```
 Start Apache2 again.
-```
+```console
 /etc/init.d/apache2 start
 ```
 Stop acting like a root user.
-```
+```console
 exit
 ```
 Install Xorg and Firefox:
-```
+```console
 sudo aptitude install xorg
 sudo apt-get install firefox
 ```
 Open your Firefox and go to the admin web page on `http://ltsp-root01/ltsp-cluster-control/Admin/admin.php`.
-```
+```console
 startx
 firefox
 ```
@@ -266,17 +261,17 @@ In the tab `Nodes`, create a new node by clicking the button `Create Child` and 
 #### Loadbalancer
 
 Install loadbalancer in root server.
-```
+```console
 sudo apt-get install ltsp-cluster-lbserver
 ```
 Modify information for loadbalancer.
-```
+```console
 sudo nano /etc/ltsp/lbsconfig.xml
 ```
-Here we have only one application server: <node address="http://192.168.1.102:8000" name="ltsp-appserv01"/>
+Here we have only one application server: `<node address="http://192.168.1.102:8000" name="ltsp-appserv01"/>`
 
 We have changed group name to “karmic” and max-threads to “1”.
-```
+```xml
 <?xml version="1.0"?>
 <lbsconfig>
     <lbservice listen="*:8008" max-threads="1" refresh-delay="60" returns="$IP"/>
@@ -324,11 +319,11 @@ iface eth0 inet static
       gateway 192.168.1.102
 ```
 Reboot the system.
-```
+```console
 sudo reboot
 ```
 The server should have now both interfaces working and access to the internet through NAT. Now, make all updates and upgrades:
-```
+```console
 sudo apt-get update
 sudo apt-get dist-upgrade
 ```
@@ -336,20 +331,18 @@ If, at this point, your NAT interface is up and you still don't get internet acc
 
 At this point, the Application Server and Root Server should be able to communicate. If not, review your network configurations.
 Install the following packages:
-```
+```console
 sudo apt-get install ubuntu-desktop ltsp-server ltsp-cluster-lbagent ltsp-cluster-accountmanager
 ```
 Remove following service:
+```console
+update-rc.d -f nbd-server remove
+update-rc.d -f gdm remove
+update-rc.d -f bluetooth remove
+update-rc.d -f pulseaudio remove
 ```
-sudo update-rc.d -f nbd-server remove
-sudo update-rc.d -f gdm remove
-sudo update-rc.d -f bluetooth remove
-sudo update-rc.d -f pulseaudio remove
+Create the file `/etc/xdg/autostart/pulseaudio-module-suspend-on-idle.desktop` and copy this inside that file:
 ```
-Create following file and copy this inside that file:
-```
-sudo nano /etc/xdg/autostart/pulseaudio-module-suspend-on-idle.desktop
-
 [Desktop Entry]
 Version=1.0
 Encoding=UTF-8
@@ -362,11 +355,11 @@ Categories=
 GenericName=
 ```
 Create a test user and add user to the following groups:
-```
-sudo adduser ltsp001
-sudo adduser ltsp001 fuse
-sudo adduser ltsp001 audio
-sudo adduser ltsp001 video
+```console
+adduser ltsp001
+adduser ltsp001 fuse
+adduser ltsp001 audio
+adduser ltsp001 video
 ```
 You now have a working Application Server.
 
@@ -374,17 +367,19 @@ You now have a working Application Server.
 
 To make sure everything works as expected, turn on your Application Server and only after turn on your Root Server. In the root server, the `/var/log/ltsp-cluster-lbserver.log` log file should look like this:
 
-![LTSP Log](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/ltsp-log.png)
+![LTSP Log](https://github.com/flpmat/ltsp-cluster-openvz/blob/master/images/ltsp-log.png)
 
 If the screen above shows a wrong IP for the Application Server, try changing the default gateway to the host-only adapter ([default-gateway](#Setting-default-gateway))
 
 Turn on your Thin Client machine. As this computer is not assigned to a node yet, it will show the following screen upon successful boot:
 
 ![Thin Client Info](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/thin-client-info.png)
-Change to
-To add the thin client computer to a node, open the ltsp-cluster center and go to the tab `Nodes`. Change to AppServ01 node, select the computer on the list and click on Add to AppServ01:
+
+To add the thin client computer to a node, open the ltsp-cluster control center and go to the tab `Nodes`. Change to AppServ01 node:
 
 ![Step 1](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/add to app 1.png)
+
+Select the computer on the list and click on `Move to AppServ01`:
 
 ![Step 2](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/move to app 2.png)
 
@@ -400,7 +395,7 @@ You may encouter the following error upon your thin client boot:
 ./screen_session: 78: ./screen_session: /usr/share/ltsp/screen.d/: Permission denied
 ```
 To fix this, substitute the content of the file `/opt/ltsp/amd64/usr/share/ltsp/screen_session` with the content below:
-```
+```bash
 #!/bin/sh
 #
 #  Copyright (c) 2002 McQuillan Systems, LLC
@@ -487,20 +482,20 @@ done
 ``` 
 
 After that, update the ltsp image:
-```
+```console
 ltsp-update-image i386
 ```
 
 ### Setting default gateway
 Check which default gateway is set:
-```
+```console
 ip route
 ```
 To delete the current default gateway, run: 
-```
+```console
 sudo route delete default gw <IP Address> <Adapter>
 ```
 To add a new default gateway, run: 
-```
+```console
 sudo route add default gw <IPAddress> <Adapter>
 ```   
