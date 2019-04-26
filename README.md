@@ -1,11 +1,11 @@
 # LTSP-Cluster (Tutorial)
 
 # Table of Contents
-1. [LTSP-Cluster](#LSTP-Cluster)
+1. [LTSP-Cluster](#ltsp-cluster)
 2. [Root Server](#root-server)
 3. [Application Server](#application-server)
-4. [Running](#Running)
-5. [Troubleshooting](#Troubleshoot)
+4. [Running](#running)
+5. [Troubleshooting](#troubleshooting)
 6. [References](#References)
 
 # LTSP-Cluster
