@@ -31,6 +31,8 @@ Now, create two VirtualBox machines. These machines must be configured so that b
 
 After that, create a virtual machine for the thin client. Set 512mb of RAM and configure the system and the network interface like the following images:
 
+![Thin Client System](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/thin-client-system.png)
+
 ![Thin Client Interface](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/thin-client-net.png)
 
 Make sure that the adapter type is PCnet-FAST III otherwise the thin client won't be able to receive the image through TFTP.
