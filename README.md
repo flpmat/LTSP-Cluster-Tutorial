@@ -29,9 +29,7 @@ Now, create two VirtualBox machines. These machines must be configured so that b
 
 ![Root Server Interface 2](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/root-serv-net-2.png)
 
-After that, create a virtual machine for the thin client. Set 512mb of RAM and configure the system and the network interface like the following images:
-
-![Thin Client System](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/thin-client-system.png)
+After that, create a virtual machine for the thin client. Set 512mb of RAM and configure the system to boot through the network. Set the network interface like the following image:
 
 ![Thin Client Interface](https://github.com/flpmat/LTSP-Cluster-Tutorial/blob/master/images/thin-client-net.png)
 
@@ -375,7 +373,7 @@ You now have a working Application Server.
 
 # Running
 
-To make sure everything works as expected, turn on your Application Server and only after turn on your Root Server. In the root server, the `/var/log/ltsp-cluster-lbserver.log` log file should look like this:
+To make sure everything works as expected, turn on your Application Server first and then your Root Server. In the root server, the `/var/log/ltsp-cluster-lbserver.log` log file should look like this:
 
 ![LTSP Log](https://github.com/flpmat/ltsp-cluster-openvz/blob/master/images/ltsp-log.png)
 
